@@ -13,6 +13,15 @@ class CPU(BaseModel):
 class IO(BaseModel):
     stats: str
 
+class Filesystem(BaseModel):
+    stats: str
+
+class Memory(BaseModel):
+    stats: str
+
+class Scheduler(BaseModel):
+    stats: str
+
 app = FastAPI()
 
 origins = [
@@ -28,40 +37,52 @@ app.add_middleware(
     allow_headers=["*"],
 )
 
-# Replace /proc filepaths with real filepaths
-# I will need to read in from proc somehow
 statistics = {
-    "cpu": "/proc/cpu",
-    "io": "/proc/io",
-    "filesystem": "/proc/filesystem",
-    "memory": "/proc/memoryj",
-    "scheduler": "/proc/scheduler"
+    "cpu": "/proc/cpuinfo",
+    "io": "/proc/diskstats",
+    "filesystem": "/proc/mounts",
+    "memory": "/proc/meminfo",
+    "scheduler": "/proc/schedstat"
 }
+
+class Home(BaseModel):
+    greeting: str
 
 @app.get("/home")
 async def read_root():
-    return {"Hello": "World"}
+    return Home(greeting="Hello world!")
 
 @app.get("/cpu", response_model=CPU)
 async def read_cpu():
-    return CPU(stats=statistics["cpu"])
+    with open("/proc/cpuinfo", "r") as file :
+        cpu_info = file.read()
+    # return CPU(stats=cpu_info)
+    return CPU(stats="hiya")
 
-@app.get("/io")
-async def read_cpu():
-    return {}
+@app.get("/io", response_model=IO)
+async def read_io():
+    with open("/proc/diskstats", "r") as file :
+        diskstats = file.read()
+    return IO(stats=diskstats)
 
 @app.get("/filesystem")
-async def read_cpu():
-    return {}
+async def read_filesystem():
+    with open("/proc/mounts", "r") as file :
+        mounts = file.read()
+    return Filesystem(stats=mounts)
 
 @app.get("/memory")
-async def read_cpu():
-    return {}
+async def read_memory():
+    with open("/proc/meminfo", "r") as file :
+        meminfo = file.read()
+    return Memory(stats=meminfo)
 
 @app.get("/scheduler")
-async def read_cpu():
-    return {}
+async def read_scheduler():
+    with open("/proc/schedstat", "r") as file :
+        schedstat = file.read()
+    return Scheduler(stats=schedstat)
 
 
 if __name__ == "__main__":
-    uvicorn.run(app, host="0.0.0.0", port=8000)
+    uvicorn.run("main:app", host="0.0.0.0", port=8000, reload=True)
