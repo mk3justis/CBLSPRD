@@ -48,6 +48,10 @@ statistics = {
 class Home(BaseModel):
     greeting: str
 
+@app.get("/test")
+async def testing():
+    return {"message": "Server is working!"}
+
 @app.get("/home")
 async def read_root():
     return Home(greeting="Hello world!")
