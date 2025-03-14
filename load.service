@@ -1,0 +1,9 @@
+[Unit]
+Description=systemd service file for the load.sh script.
+
+[Service]
+ExecStart=/home/jnazirbage/load.sh
+
+[Install]
+WantedBy=multi-user.target
+
