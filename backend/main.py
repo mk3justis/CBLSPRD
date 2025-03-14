@@ -60,8 +60,7 @@ async def read_root():
 async def read_cpu():
     with open("/proc/cpuinfo", "r") as file :
         cpu_info = file.read()
-    # return CPU(stats=cpu_info)
-    return CPU(stats="hiya")
+    return CPU(stats=cpu_info)
 
 @app.get("/io", response_model=IO)
 async def read_io():
@@ -89,4 +88,4 @@ async def read_scheduler():
 
 
 if __name__ == "__main__":
-    uvicorn.run("main:app", host="0.0.0.0", port=8000, reload=True)
+    uvicorn.run("main:app", host="0.0.0.0", port=8080, reload=True)
