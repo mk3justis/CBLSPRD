@@ -10,19 +10,25 @@ class CPU(BaseModel):
 
     def parse(self, stats) :
         lines = stats.split("\n")
+        cpu_usage = {}
         stats_dict = {}
         for line in lines :
-            if line.startswith("cpu") :
+            if line.startswith("cpu") and not line.startswith("cpu0") and not line.startswith("cpu1"):
                 parts = line.split()
-                cpu_num = parts[0]
-                cpu_data = parts[1:]
-                stats_dict[cpu_num] = cpu_data
-            elif line.startswith("ctxt") :
-                stats_dict["context_switches"] = line.split()[1:]
-            elif line.startswith("procs_running") :
-                stats_dict["procs_running"] = line.split()[1:]
-            elif line.startswith("softirq") :
-                stats_dict["softirq"] = line.split()[1:]
+                cpu_usage["cpu"] = parts[0]
+                cpu_usage["user"] = int(parts[1])
+                cpu_usage["nice"] = int(parts[2])
+                cpu_usage["system"] = int(parts[3])
+                cpu_usage["idle"] = int(parts[4])
+                cpu_usage["iowait"] = int(parts[5])
+                cpu_usage["irq"] = int(parts[6])
+                cpu_usage["softirq"] = int(parts[7])
+                cpu_usage["steal"] = int(parts[8])
+                cpu_usage["guest"] = int(parts[9])
+                cpu_usage["guest_nice"] = int(parts[10])
+                usage = ((cpu_usage["user"] + cpu_usage["system"]) / (cpu_usage["user"] + cpu_usage["nice"] + cpu_usage["system"] + cpu_usage["idle"] + cpu_usage["iowait"] + cpu_usage["irq"] + cpu_usage["softirq"] + cpu_usage["steal"]))
+                stats_dict["cpu usage"] = str(round(usage, 5)*100)
+                break
         return stats_dict
 
 class IO(BaseModel):

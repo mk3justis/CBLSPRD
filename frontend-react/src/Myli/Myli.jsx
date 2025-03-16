@@ -30,7 +30,7 @@ function Myli(props){
     return(
         <>
             <div className={styles.li}>{props.metric}</div>
-            {/* <Graph metric={props.metric}/> */}
+            <Graph metric={props.metric} data={data}/>
         </>
     )
 }

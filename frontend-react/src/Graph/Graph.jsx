@@ -3,7 +3,7 @@ import { Chart as ChartJS} from "chart.js/auto"
 import { Line } from "react-chartjs-2"
 import { useState, useEffect } from "react"
 
-function Graph({metric}, vars) {
+function Graph({metric}, data) {
 
     return(
         <div className={styles.lineGraph}>
@@ -12,7 +12,7 @@ function Graph({metric}, vars) {
                     labels: [10, 9, 8, 7, 6, 5, 4, 3, 2, 1],
                     datasets: [{
                         label: metric,
-                        data: data[metric],
+                        data: data,
                         borderColor: 'red',
                         borderWidth: 1
                     }
