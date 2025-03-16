@@ -9,11 +9,10 @@ function Header() {
             <nav>
                 <ul>
                     <Myli metric="CPU" vars={["cpu", "cpu0", "cpu1", "ctxt", "procs_running", "softirq"]} ></Myli>
-                    <Myli metric="IO"></Myli>
-                    <Myli metric="Filesystem"></Myli>
-                    <Myli metric="Memory"></Myli>
-                    <Myli metric="Scheduler"></Myli>
-                    <Myli metric="Load"></Myli>
+                    <Myli metric="IO" vars={["reads0", "writes4", "ios8"]}></Myli>
+                    <Myli metric="Memory" vars={["MemFree"]}></Myli>
+                    <Myli metric="Scheduler" vars={["running6", "waiting7"]}></Myli>
+                    <Myli metric="Load" vars={["one", "five", "fifteen"]}></Myli>
                 </ul>
             </nav>
         </header>

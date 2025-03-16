@@ -23,7 +23,6 @@ function Graph({metric}, vars) {
         };
 
         fetchData();
-
         const intervalId = setInterval(fetchData, 1000);
 
         return () => clearInterval(intervalId);
@@ -32,7 +31,7 @@ function Graph({metric}, vars) {
     if (!data) {
         return <div>Loading...</div>;
     }
-    //console.log(data)
+    console.log(data)
     return(
         <div className={styles.lineGraph}>
             <Line

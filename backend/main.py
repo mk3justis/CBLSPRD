@@ -4,13 +4,9 @@ from fastapi.middleware.cors import CORSMiddleware
 from fastapi.responses import HTMLResponse
 from pydantic import BaseModel
 from typing import Dict, Any
-# from typing import List
-
-# In case I forget...
-# To run the server: uvicorn main:app --reload
 
 class CPU(BaseModel):
-    stats: Dict[str, Any]
+    cpu_stats: Dict[str, Any]
 
     def parse(self, stats) :
         lines = stats.split("\n")
@@ -29,27 +25,37 @@ class CPU(BaseModel):
                 stats_dict["softirq"] = line.split()[1:]
         return stats_dict
 
-
 class IO(BaseModel):
-    stats: str
+    io_stats: Dict[str, Any]
 
-class Stat(BaseModel):
-    stats: str
+    def parse(self, stats):
+        lines = stats.split("\n")
+        stats_dict = {}
+        for line in lines:
+            if not line.strip():
+                continue
+            parts = line.split()
+            if len(parts) > 2:
+                device = parts[2]
+                if device == 'sda' or device == 'sda1':
+                    device_data = parts[3:]
+                    stats_dict[device] = device_data
+        return stats_dict
 
 class Memory(BaseModel):
-    stats: str
+    memory_stats: Dict[str, Any]
 
 class Scheduler(BaseModel):
-    stats: str
+    scheduler_stats: Dict[str, Any]
 
 class Load(BaseModel):
-    stats: str
+    load_stats: Dict[str, Any]
 
 app = FastAPI()
 
 origins = [
-    "http://localhost:5176",
-    "localhost:5176"
+    "http://localhost:5177",
+    "localhost:5177"
 ]
 
 app.add_middleware(
@@ -59,14 +65,6 @@ app.add_middleware(
     allow_methods=["*"],
     allow_headers=["*"],
 )
-
-statistics = {
-    "cpu": "/proc/cpuinfo",
-    "io": "/proc/diskstats",
-    "filesystem": "/proc/mounts",
-    "memory": "/proc/meminfo",
-    "scheduler": "/proc/schedstat"
-}
 
 class Home(BaseModel):
     greeting: str
@@ -83,39 +81,38 @@ async def read_root():
 async def read_cpu():
     with open("/proc/stat", "r") as file :
         stats = file.read()
-    cpu = CPU(stats={})
+    cpu = CPU(cpu_stats={})
     parsed_stats = cpu.parse(stats)
-    return {"stats":parsed_stats}
+    return {"cpu_stats":parsed_stats}
 
 @app.get("/io", response_model=IO)
 async def read_io():
     with open("/proc/diskstats", "r") as file :
         diskstats = file.read()
-    return IO(stats=diskstats)
-
-@app.get("/stat")
-async def read_stat():
-    with open("/proc/stat", "r") as file :
-        stat = file.read()
-    return Stat(stats=stat)
+    io = IO(io_stats={})
+    parsed_stats = io.parse(diskstats)
+    return {"io_stats":parsed_stats}
 
 @app.get("/memory")
 async def read_memory():
     with open("/proc/meminfo", "r") as file :
         meminfo = file.read()
-    return Memory(stats=meminfo)
+    memory = Memory(memory_stats={})
+    return {"memory_stats":meminfo}
 
 @app.get("/scheduler")
 async def read_scheduler():
     with open("/proc/schedstat", "r") as file :
         schedstat = file.read()
-    return Scheduler(stats=schedstat)
+    scheduler = Scheduler(scheduler_stats={})
+    return {"scheduler_stats": schedstat}
 
 @app.get("/load")
 async def read_load():
     with open("/proc/loadavg", "r") as file :
         loadavg = file.read()
-    return Load(stats=loadavg)
+    load = Load(load_stats={})
+    return {"load_stats": loadavg}
 
 
 if __name__ == "__main__":
