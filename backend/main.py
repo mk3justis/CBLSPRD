@@ -57,7 +57,7 @@ class Memory(BaseModel):
         for line in lines:
             parts = line.split()
             if line.startswith("MemFree") :
-                entry = parts[1]+parts[2]
+                entry = parts[1]
                 stats_dict["MemFree"] = entry
         return stats_dict
 
@@ -88,8 +88,8 @@ class Load(BaseModel):
 app = FastAPI()
 
 origins = [
-    "http://localhost:5177",
-    "localhost:5177"
+    "http://localhost:5174",
+    "localhost:5174"
 ]
 
 app.add_middleware(
