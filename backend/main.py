@@ -35,21 +35,49 @@ class IO(BaseModel):
             if not line.strip():
                 continue
             parts = line.split()
-            if len(parts) > 2:
-                device = parts[2]
-                if device == 'sda' or device == 'sda1':
-                    device_data = parts[3:]
-                    stats_dict[device] = device_data
+            device = parts[2]
+            if device.startswith("sda") :
+                stats_dict["reads"] = parts[3]
+                stats_dict["writes"] = parts[7]
+                stats_dict["I/Os "] = parts[11]
         return stats_dict
 
 class Memory(BaseModel):
     memory_stats: Dict[str, Any]
 
+    def parse(self, stats):
+        lines = stats.split("\n")
+        stats_dict = {}
+        for line in lines:
+            parts = line.split()
+            if line.startswith("MemFree") :
+                entry = parts[1]+parts[2]
+                stats_dict["MemFree"] = entry
+        return stats_dict
+
 class Scheduler(BaseModel):
     scheduler_stats: Dict[str, Any]
 
+    def parse(self, stats):
+        lines = stats.split("\n")
+        stats_dict = {}
+        for line in lines:
+            if line.startswith("cpu") :
+                parts = line.split()
+                stats_dict["cpu_runtime"] = parts[7]
+                stats_dict["cpu_waittime"] = parts[8]
+        return stats_dict
+
 class Load(BaseModel):
     load_stats: Dict[str, Any]
+
+    def parse(self, stats):
+        stats_dict = {}
+        parts = stats.split(" ")
+        stats_dict["one"] = parts[0]
+        stats_dict["five"] = parts[1]
+        stats_dict["fifteen"] = parts[2]
+        return stats_dict
 
 app = FastAPI()
 
@@ -98,21 +126,24 @@ async def read_memory():
     with open("/proc/meminfo", "r") as file :
         meminfo = file.read()
     memory = Memory(memory_stats={})
-    return {"memory_stats":meminfo}
+    parsed_stats = memory.parse(meminfo)
+    return {"memory_stats":parsed_stats}
 
 @app.get("/scheduler")
 async def read_scheduler():
     with open("/proc/schedstat", "r") as file :
         schedstat = file.read()
     scheduler = Scheduler(scheduler_stats={})
-    return {"scheduler_stats": schedstat}
+    parsed_stats = scheduler.parse(schedstat)
+    return {"scheduler_stats": parsed_stats}
 
 @app.get("/load")
 async def read_load():
     with open("/proc/loadavg", "r") as file :
         loadavg = file.read()
     load = Load(load_stats={})
-    return {"load_stats": loadavg}
+    parsed_stats = load.parse(loadavg)
+    return {"load_stats": parsed_stats}
 
 
 if __name__ == "__main__":
