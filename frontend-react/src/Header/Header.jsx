@@ -8,6 +8,7 @@ function Header() {
             <h1 className={styles.h1}>CBLSPRD</h1>
             <nav>
                 <ul>
+                    {/*Custom list components to handle fetching the data from the API and creating graphs*/}
                     <Myli metric="CPU" vars={["cpu", "cpu0", "cpu1", "ctxt", "procs_running", "softirq"]} ></Myli>
                     <Myli metric="IO" vars={["reads", "writes", "ios"]}></Myli>
                     <Myli metric="Memory" vars={["MemFree"]}></Myli>

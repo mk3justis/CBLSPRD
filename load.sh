@@ -22,13 +22,17 @@ scheduler=("affinity" "clone" "cyclic" "daemon" "dnotify" "eventfd" "exec" "exit
 # These are the time intervals that each stress may run for
 intervals=(10 15 20 25 30)
 while true; do
+	# Pick a random class
 	name=${classes[(( $RANDOM%"${#classes[@]}" ))]}
+	# Pick a random time and calculate stressors needed
 	time=$(( $RANDOM%"${#intervals[@]}" ))
 	num_stressors=$(( ${intervals[time]}/5 ))
 	stressors=""
+	# References the array variable name using the string name
 	eval "array=(\"\${$name[@]}\")"
 	length=${#array[@]}
 	echo "Class: ${name}"; echo "Number of Stressors: ${num_stressors}"
+	# Picks a random stressor for each of the stressors that will run
 	for (( i=0; i<$num_stressors; i++ )) do
 		index="$(( RANDOM%$length ))"
 		stressors+=${array[$index]}
@@ -37,6 +41,7 @@ while true; do
 		fi
 	done
 	echo "Stressors: ${stressors}"
+	# Runs the stress-ng command with the calculated options
 	stress-ng --seq 1 --with $stressors -t 5 --progress --log-file /var/log/load.log
 done
 

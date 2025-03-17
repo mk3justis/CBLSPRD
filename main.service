@@ -1,0 +1,18 @@
+[Unit]
+Description=Auto-restart main.py
+After=network.target
+
+[Service]
+ExecStart=/home/jnazirbage/venv/bin/python /home/jnazirbage/main.py
+Restart=always
+RestartSec=10
+User=jnazirbage
+Group=apigroup
+WorkingDirectory=/home/jnazirbage/
+StandardOutput=append:/var/log/api.log
+StandardError=append:/var/log/api.log
+KillMode=process
+RestartForceExitStatus=SIGINT
+
+[Install]
+WantedBy=multi-user.target

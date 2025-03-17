@@ -7,12 +7,13 @@ from typing import Dict, Any
 
 class CPU(BaseModel):
     cpu_stats: Dict[str, Any]
-
+    # Parses through the /proc/stat file and gets the needed options
     def parse(self, stats) :
         lines = stats.split("\n")
         cpu_usage = {}
         stats_dict = {}
         for line in lines :
+            # Only care for the total cpu stats
             if line.startswith("cpu") and not line.startswith("cpu0") and not line.startswith("cpu1"):
                 parts = line.split()
                 cpu_usage["cpu"] = parts[0]
@@ -26,6 +27,7 @@ class CPU(BaseModel):
                 cpu_usage["steal"] = int(parts[8])
                 cpu_usage["guest"] = int(parts[9])
                 cpu_usage["guest_nice"] = int(parts[10])
+                # Use the stats to come up with a usage metric
                 usage = ((cpu_usage["user"] + cpu_usage["system"]) / (cpu_usage["user"] + cpu_usage["nice"] + cpu_usage["system"] + cpu_usage["idle"] + cpu_usage["iowait"] + cpu_usage["irq"] + cpu_usage["softirq"] + cpu_usage["steal"]))
                 stats_dict["cpu usage"] = str(round(usage, 5)*100)
                 break
@@ -41,8 +43,10 @@ class IO(BaseModel):
             if not line.strip():
                 continue
             parts = line.split()
+            # Based on documentation, device name is the third field
             device = parts[2]
             if device.startswith("sda") :
+                # There were well over a dozen fields; these are most important
                 stats_dict["reads"] = parts[3]
                 stats_dict["writes"] = parts[7]
                 stats_dict["I/Os "] = parts[11]
@@ -51,6 +55,7 @@ class IO(BaseModel):
 class Memory(BaseModel):
     memory_stats: Dict[str, Any]
 
+    # Simply looks for the MemFree field
     def parse(self, stats):
         lines = stats.split("\n")
         stats_dict = {}
@@ -64,6 +69,7 @@ class Memory(BaseModel):
 class Scheduler(BaseModel):
     scheduler_stats: Dict[str, Any]
 
+    # Gets the cpu runtime and waittime
     def parse(self, stats):
         lines = stats.split("\n")
         stats_dict = {}
@@ -77,6 +83,8 @@ class Scheduler(BaseModel):
 class Load(BaseModel):
     load_stats: Dict[str, Any]
 
+    # Gets the first three fields
+    # which are the load averages over 1, 5, & 15 minutes
     def parse(self, stats):
         stats_dict = {}
         parts = stats.split(" ")
@@ -92,6 +100,7 @@ origins = [
     "localhost:5174"
 ]
 
+# Handles security to only allow certain requests
 app.add_middleware(
     CORSMiddleware,
     allow_origins=origins,
@@ -111,6 +120,8 @@ async def testing():
 async def read_root():
     return Home(greeting="Hello world!")
 
+# All of the endpoints used in the frontend.
+# Each parses and returns the data from the /proc files.
 @app.get("/cpu", response_model=CPU)
 async def read_cpu():
     with open("/proc/stat", "r") as file :
@@ -151,6 +162,6 @@ async def read_load():
     parsed_stats = load.parse(loadavg)
     return {"load_stats": parsed_stats}
 
-
+# Runs the app on port 8080
 if __name__ == "__main__":
     uvicorn.run("main:app", host="0.0.0.0", port=8080, reload=True)
