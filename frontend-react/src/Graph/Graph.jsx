@@ -99,6 +99,11 @@ function Graph({ metric, data }) {
         const label = 20-i;
         return label % 2 === 0 ? `${label/2}s` : " ";
     });
+
+    // Notification system variables
+    const [userThreshold, setUserThreshold] = useState(80);
+    const [cpuAboveThreshold, setCpuAboveThreshold] = useState(false);
+
     // Uses hook to create chart without rerendering it in a loop
     const [chartData, setChartData] = useState({
         labels: x_labels,
@@ -146,6 +151,7 @@ function Graph({ metric, data }) {
             if (!data[key]) return;
     
             setChartData(prevData => {
+                let isAboveThreshold = false;
                 const updatedData = {
                     labels: x_labels,
                     datasets: prevData.datasets.map(dataset => {
@@ -153,7 +159,13 @@ function Graph({ metric, data }) {
     
                         if (statData) { // Ensure it's not undefined
                             const newValue = Number(statData); // Direct conversion
-    
+                            const isCPU = metric.toLowerCase() === "cpu";
+                            const isPastThreshold = isCPU && newValue >= userThreshold;
+
+                            if (isPastThreshold)
+                            {
+                                isAboveThreshold = true;
+                            }
                             // console.log(`Processing new value for ${dataset.label}:`, newValue);
     
                             return {
@@ -169,18 +181,34 @@ function Graph({ metric, data }) {
                     chartInstance.current.data = updatedData;
                     chartInstance.current.update();
                 }
-    
+                setCpuAboveThreshold(isAboveThreshold);
                 return updatedData;
             });
         }, 500);
     
         return () => clearInterval(interval);
-    }, [data]);
+    }, [data, userThreshold]);
     
 
     // Return the chart reference from the hook
     return (
         <div>
+            {metric.toLowerCase() === "cpu" && (
+            <>
+                <input
+                    type="number" 
+                    value={userThreshold} 
+                    onChange={e => setUserThreshold(Number(e.target.value))} 
+                    style={{ marginBottom: "10px" }}
+                    placeholder="Set CPU Threshold">
+                </input>
+                {cpuAboveThreshold && (
+                    <div style={{ color: "red", fontWeight: "bold" }}>
+                        WARNING: CPU Usage Above {userThreshold}%!
+                    </div>
+                )}
+            </>
+            )}
             <canvas ref={chartRef}></canvas>
         </div>
     );
