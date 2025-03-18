@@ -85,7 +85,7 @@ function Graph({ metric, data }) {
         return <div>Loading...</div>;
     }
 
-    console.log(data)
+    // console.log(data)
     // Uses hooks to create a chart reference and instance for use later
     const chartRef = useRef(null);
     const chartInstance = useRef(null);
@@ -107,7 +107,7 @@ function Graph({ metric, data }) {
         datasets: Object.keys(data[key]).map((stat, index) => ({
             label: `${stat}`,
             // Makes the lines show realtime by storing the old values
-            data: [...data[key][stat]].slice(-20),
+            data: [...data[key][stat]].map(value => Number(value)).slice(-20),
             borderColor: colors[index % colors.length],
             fill: false
         }))
@@ -145,27 +145,38 @@ function Graph({ metric, data }) {
         const interval = setInterval(() => {
             if (!data[key]) return;
     
-            setChartData(prevData => ({
-                labels: x_labels,
-                datasets: prevData.datasets.map(dataset => {
-                    const statData = data[key][dataset.label];
+            setChartData(prevData => {
+                const updatedData = {
+                    labels: x_labels,
+                    datasets: prevData.datasets.map(dataset => {
+                        const statData = data[key][dataset.label];
     
-                    if (statData && statData.length > 0) {
-                        const newData = [...dataset.data.slice(1), statData[statData.length - 1]];
-                        return {
-                            ...dataset,
-                            data: newData
-                        };
-                    }
+                        if (statData) { // Ensure it's not undefined
+                            const newValue = Number(statData); // Direct conversion
     
-                    return dataset;
-                })
-            }));
-        // Update with a new point every half-second
+                            // console.log(`Processing new value for ${dataset.label}:`, newValue);
+    
+                            return {
+                                ...dataset,
+                                data: dataset.data.length >= 20 ? [...dataset.data.slice(1), newValue] : [...dataset.data, newValue]
+                            };
+                        }
+                        return dataset;
+                    })
+                };
+    
+                if (chartInstance.current) {
+                    chartInstance.current.data = updatedData;
+                    chartInstance.current.update();
+                }
+    
+                return updatedData;
+            });
         }, 500);
     
         return () => clearInterval(interval);
-    }, [data[key]]);
+    }, [data]);
+    
 
     // Return the chart reference from the hook
     return (

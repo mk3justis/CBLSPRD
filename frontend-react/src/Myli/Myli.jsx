@@ -8,7 +8,7 @@ function Myli(props){
     useEffect(() => {
         const fetchData = () => {
             // server url
-            let url='http://35.196.131.126:8080/'+props.metric.toLowerCase();
+            let url='http://34.73.203.169:8080/'+props.metric.toLowerCase();
             fetch(url)
             .then(response => response.json())
             .then(fetchedData => {
